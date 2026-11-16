@@ -5,19 +5,27 @@ import type { Cell, GameEvent, GameState, Terrain } from "../../core/mod.ts";
 import { keyOf, terrainAt } from "../../core/mod.ts";
 
 export const CELL_SIZE = 32;
+const TILE_SIZE = 16;
+const SCALE = CELL_SIZE / TILE_SIZE;
+const SHEET_COLUMNS = 49;
 const VIEW_WIDTH = 800;
 const VIEW_HEIGHT = 600;
 const WALK_MS = 120;
 const BUMP_MS = 60;
 const HOP_MS = 80;
-const MARKER_COLOR = 0xf5e6a8;
 const BUMP_COLOR = 0xe0533d;
 
-const TERRAIN_COLORS: Record<Terrain, number> = {
-  grass: 0x5d9e4a,
-  forest: 0x2f6b3a,
-  water: 0x2d5f9e,
-  rock: 0x6e6a66,
+function frame(column: number, row: number): number {
+  return row * SHEET_COLUMNS + column;
+}
+
+const HERO = frame(27, 0);
+
+const TERRAIN_FRAMES: Record<Terrain, number> = {
+  grass: frame(5, 0),
+  forest: frame(0, 1),
+  water: frame(8, 5),
+  rock: frame(22, 0),
 };
 
 // Enough cells to cover the view, plus a margin so that the camera can lag behind
@@ -38,8 +46,9 @@ export class GridView extends Phaser.Scene {
   private readonly seed: number;
   private readonly start: Cell;
   private readonly gathered = new Set<string>();
-  private ground!: Phaser.GameObjects.Graphics;
-  private marker!: Phaser.GameObjects.Arc;
+  private readonly tiles: Phaser.GameObjects.Image[] = [];
+  private marker!: Phaser.GameObjects.Image;
+  onCreate: () => void = () => {};
 
   constructor(state: GameState) {
     super("grid");
@@ -47,13 +56,23 @@ export class GridView extends Phaser.Scene {
     this.start = { ...state.player };
   }
 
+  preload() {
+    this.load.spritesheet("tiles", "tiles.png", {
+      frameWidth: TILE_SIZE,
+      frameHeight: TILE_SIZE,
+    });
+  }
+
   create() {
-    this.ground = this.add.graphics();
+    for (let i = 0; i < (CELLS_ACROSS * 2 + 1) * (CELLS_DOWN * 2 + 1); i++) {
+      this.tiles.push(this.add.image(0, 0, "tiles", 0).setScale(SCALE));
+    }
     const { x, y } = cellCenter(this.start);
-    this.marker = this.add.circle(x, y, CELL_SIZE * 0.35, MARKER_COLOR);
+    this.marker = this.add.image(x, y, "tiles", HERO).setScale(SCALE);
     this.cameras.main.startFollow(this.marker, true, 0.2, 0.2);
     this.drawCellsAround(this.start);
     this.fitToDisplay();
+    this.onCreate();
   }
 
   // Phaser has no device-pixel setting of its own. So the canvas backing store is
@@ -114,7 +133,7 @@ export class GridView extends Phaser.Scene {
   private bump(at: Cell, toward: Cell): Promise<void> {
     const start = cellCenter(at);
     const target = cellCenter(toward);
-    this.marker.setFillStyle(BUMP_COLOR);
+    this.marker.setTint(BUMP_COLOR);
     return new Promise((done) => {
       this.tweens.add({
         targets: this.marker,
@@ -123,7 +142,7 @@ export class GridView extends Phaser.Scene {
         duration: BUMP_MS,
         yoyo: true,
         onComplete: () => {
-          this.marker.setFillStyle(MARKER_COLOR);
+          this.marker.clearTint();
           done();
         },
       });
@@ -145,19 +164,14 @@ export class GridView extends Phaser.Scene {
   // Paint only what is near the camera. Asking the core again costs little, and
   // the world itself is never stored.
   private drawCellsAround({ x: centerX, y: centerY }: Cell) {
-    this.ground.clear();
+    let i = 0;
     for (let y = centerY - CELLS_DOWN; y <= centerY + CELLS_DOWN; y++) {
       for (let x = centerX - CELLS_ACROSS; x <= centerX + CELLS_ACROSS; x++) {
-        this.ground.fillStyle(
-          TERRAIN_COLORS[terrainAt(this.seed, x, y)],
-          this.gathered.has(keyOf({ x, y })) ? 0.4 : 1,
-        );
-        this.ground.fillRect(
-          x * CELL_SIZE,
-          y * CELL_SIZE,
-          CELL_SIZE - 1,
-          CELL_SIZE - 1,
-        );
+        const center = cellCenter({ x, y });
+        this.tiles[i++]
+          .setPosition(center.x, center.y)
+          .setFrame(TERRAIN_FRAMES[terrainAt(this.seed, x, y)])
+          .setAlpha(this.gathered.has(keyOf({ x, y })) ? 0.35 : 1);
       }
     }
   }
@@ -171,19 +185,18 @@ export function startGridView(
 ): Promise<GridView> {
   return new Promise((ready) => {
     const view = new GridView(state);
+    view.onCreate = () => ready(view);
     new Phaser.Game({
       type: Phaser.AUTO,
       parent,
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
-      backgroundColor: "#14161a",
+      backgroundColor: "#472d3c",
+      pixelArt: true,
       banner: false,
       audio: { noAudio: true },
       input: { keyboard: false, mouse: false, touch: false, gamepad: false },
       scene: view,
-      callbacks: {
-        postBoot: () => ready(view),
-      },
     });
   });
 }

@@ -85,6 +85,8 @@ Tooling adapted from the [CMPM 121 Fall 2026 D2 starter](https://github.com/ucsc
 
 Sounds are from Kenney's [RPG Audio](https://kenney.nl/assets/rpg-audio) (CC0).
 
+Tiles are from Kenney's [1-Bit Pack](https://kenney.nl/assets/1-bit-pack) (CC0).
+
 ## Review bot
 
 On every push to `main`, a review bot can comment on your commit. It's optional practice feedback, and it can be wrong, so weigh what it says. Until you set it up or opt out, the Review Bot workflow shows a red X and comments on every push. That X is about the bot: check the Deploy workflow separately to see whether your own checks passed.
