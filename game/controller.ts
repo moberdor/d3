@@ -36,10 +36,14 @@ export class Controller {
     addEventListener("blur", () => this.held = []);
   }
 
+  send(command: Command) {
+    this.pressed = command;
+    this.next();
+  }
+
   private keyDown(event: KeyboardEvent) {
     if (event.key.toLowerCase() === "g" && !event.repeat) {
-      this.pressed = { type: "gather" };
-      this.next();
+      this.send({ type: "gather" });
       return;
     }
     const direction = ARROWS[event.key];

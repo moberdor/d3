@@ -51,12 +51,14 @@ export class Hud {
       this.showPosition(event.at.x, event.at.y);
       this.showInventory(event.inventory);
     }
+    if (event.type === "crafted") this.showInventory(event.inventory);
   }
 
   private showInventory(inventory: Record<string, number>) {
     const list = element("inventory");
     list.replaceChildren();
     for (const [item, count] of Object.entries(inventory)) {
+      if (count === 0) continue;
       const row = document.createElement("li");
       row.textContent = `${item} x${count}`;
       list.append(row);
