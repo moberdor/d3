@@ -3,6 +3,13 @@
 
 export type Terrain = "grass" | "forest" | "water" | "rock";
 
+export const TERRAINS: Record<Terrain, { yields: string; chance: number }> = {
+  grass: { yields: "fiber", chance: 0.5 },
+  forest: { yields: "wood", chance: 1 },
+  water: { yields: "iron", chance: 1 },
+  rock: { yields: "stone", chance: 1 },
+};
+
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
@@ -15,6 +22,10 @@ export function terrainAt(seed: number, x: number, y: number): Terrain {
 
 export function isPassable(terrain: Terrain): boolean {
   return terrain !== "water" && terrain !== "rock";
+}
+
+export function luckAt(seed: number, x: number, y: number): number {
+  return gridValue(seed + 3, x, y);
 }
 
 // Value noise: random numbers at coarse grid points, blended between them, so
