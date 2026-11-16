@@ -19,7 +19,17 @@ function describe(event: GameEvent): string {
       return `gathered ${event.item}`;
     case "foundNothing":
       return "nothing to gather here";
+    case "crafted":
+      return `made ${event.recipe}`;
+    case "craftFailed":
+      return `can't make ${event.recipe}, need ${itemList(event.missing)}`;
   }
+}
+
+export function itemList(items: Record<string, number>): string {
+  return Object.entries(items)
+    .map(([item, count]) => `${count} ${item}`)
+    .join(", ");
 }
 
 // The readout, as ordinary page elements that CSS can style and that assistive
