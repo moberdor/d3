@@ -45,14 +45,18 @@ Deno.test("a kept gathered event does not change after a later gather", () => {
   assertEquals(kept, copy);
 });
 
-Deno.test("an unlucky gather gives nothing and changes nothing", () => {
+Deno.test("an unlucky gather gives nothing but uses up the cell", () => {
   const state = standingWhere(false);
-  const snapshot = JSON.parse(JSON.stringify(state));
+  const at = { ...state.player };
+  const terrain = terrainAt(SEED, at.x, at.y);
 
   const events = apply(state, { type: "gather" });
 
-  assertEquals(state, snapshot);
-  assertEquals(events, [{ type: "foundNothing", at: snapshot.player }]);
+  assertEquals(state.inventory, {});
+  assertEquals(state.gathered, { [keyOf(at)]: true });
+  assertEquals(events, [
+    { type: "missed", at, terrain, item: TERRAINS[terrain].yields },
+  ]);
 });
 
 Deno.test("gathering twice from one cell gives nothing the second time", () => {

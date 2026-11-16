@@ -40,6 +40,7 @@ export type GameEvent =
     item: string;
     inventory: Record<string, number>;
   }
+  | { type: "missed"; at: Cell; terrain: Terrain; item: string }
   | { type: "foundNothing"; at: Cell }
   | { type: "crafted"; recipe: string; inventory: Record<string, number> }
   | { type: "craftFailed"; recipe: string; missing: Record<string, number> };
@@ -108,11 +109,12 @@ export function cellAt(state: GameState, cell: Cell) {
 function gather(state: GameState): GameEvent[] {
   const at = { ...state.player };
   const { terrain, gathered } = cellAt(state, at);
+  if (gathered) return [{ type: "foundNothing", at }];
   const row = TERRAINS[terrain];
-  if (gathered || luckAt(state.seed, at.x, at.y) >= row.chance) {
-    return [{ type: "foundNothing", at }];
-  }
   state.gathered[keyOf(at)] = true;
+  if (luckAt(state.seed, at.x, at.y) >= row.chance) {
+    return [{ type: "missed", at, terrain, item: row.yields }];
+  }
   state.inventory[row.yields] = (state.inventory[row.yields] ?? 0) + 1;
   return [{
     type: "gathered",

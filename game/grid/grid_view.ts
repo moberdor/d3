@@ -14,6 +14,7 @@ const WALK_MS = 120;
 const BUMP_MS = 60;
 const HOP_MS = 80;
 const BUMP_COLOR = 0xe0533d;
+const SHADOW_COLOR = 0x000000;
 
 function frame(column: number, row: number): number {
   return row * SHEET_COLUMNS + column;
@@ -47,6 +48,7 @@ export class GridView extends Phaser.Scene {
   private readonly start: Cell;
   private readonly gathered = new Set<string>();
   private readonly tiles: Phaser.GameObjects.Image[] = [];
+  private shadow!: Phaser.GameObjects.Image;
   private marker!: Phaser.GameObjects.Image;
   onCreate: () => void = () => {};
 
@@ -68,11 +70,20 @@ export class GridView extends Phaser.Scene {
       this.tiles.push(this.add.image(0, 0, "tiles", 0).setScale(SCALE));
     }
     const { x, y } = cellCenter(this.start);
+    this.shadow = this.add.image(x, y, "tiles", HERO)
+      .setScale(SCALE)
+      .setTint(SHADOW_COLOR)
+      .setAlpha(0.6);
     this.marker = this.add.image(x, y, "tiles", HERO).setScale(SCALE);
     this.cameras.main.startFollow(this.marker, true, 0.2, 0.2);
     this.drawCellsAround(this.start);
     this.fitToDisplay();
     this.onCreate();
+  }
+
+  override update() {
+    this.shadow.setPosition(this.marker.x + SCALE, this.marker.y + SCALE);
+    this.shadow.setScale(this.marker.scale);
   }
 
   // Phaser has no device-pixel setting of its own. So the canvas backing store is
@@ -107,6 +118,10 @@ export class GridView extends Phaser.Scene {
         this.gathered.add(keyOf(event.at));
         this.drawCellsAround(event.at);
         return this.hop();
+      case "missed":
+        this.gathered.add(keyOf(event.at));
+        this.drawCellsAround(event.at);
+        return Promise.resolve();
       case "foundNothing":
       case "crafted":
       case "craftFailed":

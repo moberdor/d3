@@ -17,6 +17,8 @@ function describe(event: GameEvent): string {
       return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}`;
     case "gathered":
       return `gathered ${event.item}`;
+    case "missed":
+      return `no ${event.item} here, try some different ${event.terrain}?`;
     case "foundNothing":
       return "nothing to gather here";
     case "crafted":
@@ -46,12 +48,13 @@ export class Hud {
   show(event: GameEvent) {
     element("live").textContent = describe(event);
     if (event.type === "moved") this.showPosition(event.to.x, event.to.y);
-    if (event.type === "gathered") {
+    if (event.type === "gathered" || event.type === "missed") {
       this.gathered.add(keyOf(event.at));
       this.showPosition(event.at.x, event.at.y);
+    }
+    if (event.type === "gathered" || event.type === "crafted") {
       this.showInventory(event.inventory);
     }
-    if (event.type === "crafted") this.showInventory(event.inventory);
   }
 
   private showInventory(inventory: Record<string, number>) {
