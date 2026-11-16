@@ -1,6 +1,20 @@
 # Emberwake
 
-You are shipwrecked on an island and need rescue. Gather wood and fiber to build a raft that lets you get iron from your ship to craft a pickaxe to mine stone, then build a signal beacon so you can be found.
+You are shipwrecked on an island and need rescue. Gather wood and fiber to make rope and a key, unlock the old box to get the gem inside, then craft the crown to win.
+
+Play it here: https://moberdor.github.io/d3/
+
+## How to play
+
+Move with arrows, G to gather, Tab + Enter to craft. Grass only has fiber sometimes. Make a key to open the box, grab the gem, then make the crown.
+
+## Run locally
+
+Run `deno task setup` once, then `deno task dev`.
+
+## Adding a recipe
+
+Add a row to `RECIPES` in `core/recipes.ts`, like `{ output: "rope", inputs: { fiber: 2 } }`. The button shows up on its own.
 
 # D3 starter
 
