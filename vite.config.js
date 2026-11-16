@@ -2,6 +2,7 @@
 export default {
   // GitHub Actions supplies the student's repository name, not the template's.
   base: Deno.env.get("REPO_NAME") ? `/${Deno.env.get("REPO_NAME")}/` : "/",
+  publicDir: "assets",
   server: {
     port: 3000,
     open: true,

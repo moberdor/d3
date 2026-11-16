@@ -39,6 +39,17 @@ export class Hud {
     if (event.type === "gathered") {
       this.gathered.add(keyOf(event.at));
       this.showPosition(event.at.x, event.at.y);
+      this.showInventory(event.inventory);
+    }
+  }
+
+  private showInventory(inventory: Record<string, number>) {
+    const list = element("inventory");
+    list.replaceChildren();
+    for (const [item, count] of Object.entries(inventory)) {
+      const row = document.createElement("li");
+      row.textContent = `${item} x${count}`;
+      list.append(row);
     }
   }
 

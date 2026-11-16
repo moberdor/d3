@@ -83,6 +83,8 @@ Read the first failing command in the output, fix what it reports, and rerun `de
 
 Tooling adapted from the [CMPM 121 Fall 2026 D2 starter](https://github.com/ucsc-cmpm-121-f26/d2-starter), with the Phaser setup following the instructor's E4 starter. Those repositories have no explicit repository license; no new license is assigned to that material. The D3 scaffold was instructor-directed and authored with Anthropic Claude agent assistance. Dependencies retain their respective licenses.
 
+Sounds are from Kenney's [RPG Audio](https://kenney.nl/assets/rpg-audio) (CC0).
+
 ## Review bot
 
 On every push to `main`, a review bot can comment on your commit. It's optional practice feedback, and it can be wrong, so weigh what it says. Until you set it up or opt out, the Review Bot workflow shows a red X and comments on every push. That X is about the bot: check the Deploy workflow separately to see whether your own checks passed.

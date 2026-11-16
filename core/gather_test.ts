@@ -29,7 +29,20 @@ Deno.test("gathering adds what the terrain yields", () => {
   const events = apply(state, { type: "gather" });
 
   assertEquals(state.inventory, { [item]: 1 });
-  assertEquals(events, [{ type: "gathered", at, item }]);
+  assertEquals(events, [
+    { type: "gathered", at, item, inventory: { [item]: 1 } },
+  ]);
+});
+
+Deno.test("a kept gathered event does not change after a later gather", () => {
+  const state = newGame(SEED);
+  const kept = apply(state, { type: "gather" });
+  const copy = JSON.parse(JSON.stringify(kept));
+
+  apply(state, { type: "move", direction: "east" });
+  apply(state, { type: "gather" });
+
+  assertEquals(kept, copy);
 });
 
 Deno.test("an unlucky gather gives nothing and changes nothing", () => {
