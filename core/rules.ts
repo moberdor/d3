@@ -48,7 +48,7 @@ export type GameEvent =
   | { type: "crafted"; recipe: string; inventory: Record<string, number> }
   | { type: "craftFailed"; recipe: string; missing: Record<string, number> }
   | { type: "unlocked"; at: Cell }
-  | { type: "finished"; recipe: string}
+  | { type: "finished"; recipe: string };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -59,7 +59,14 @@ const STEPS: Record<Direction, Cell> = {
 
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {}, unlocked: false, finished: false };
+  return {
+    seed,
+    player: { x: 0, y: 0 },
+    inventory: {},
+    gathered: {},
+    unlocked: false,
+    finished: false,
+  };
 }
 
 // The single way in. It updates the state it is given and returns the events.
@@ -104,12 +111,12 @@ function craft(state: GameState, name: string): GameEvent[] {
 
   if (name === "key" && !state.unlocked) {
     state.unlocked = true;
-    events.push({type: "unlocked", at: { ...BOX_CENTER}})
+    events.push({ type: "unlocked", at: { ...BOX_CENTER } });
   }
 
-  if (name === "CAPSTONE") {
+  if (name === CAPSTONE) {
     state.finished = true;
-    events.push({type: "finished", recipe: name})
+    events.push({ type: "finished", recipe: name });
   }
 
   return events;

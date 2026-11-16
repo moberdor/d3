@@ -133,8 +133,8 @@ export class GridView extends Phaser.Scene {
         return Promise.resolve();
       case "unlocked":
         this.unlocked = true;
-        this.drawCellsAround(this.center)
-        return Promise.resolve()
+        this.drawCellsAround(this.center);
+        return Promise.resolve();
       case "foundNothing":
       case "crafted":
       case "craftFailed":

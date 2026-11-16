@@ -1,7 +1,14 @@
 // The world is a pure function of a seed and coordinates. Nothing here is stored,
 // so the world can be effectively unbounded while saved state stays small.
 
-export type Terrain = "grass" | "forest" | "water" | "rock" | "barrier" | "box" | "gem";
+export type Terrain =
+  | "grass"
+  | "forest"
+  | "water"
+  | "rock"
+  | "barrier"
+  | "box"
+  | "gem";
 
 export const TERRAINS: Record<Terrain, { yields: string; chance: number }> = {
   grass: { yields: "fiber", chance: 0.5 },
@@ -34,7 +41,8 @@ export function terrainAt(seed: number, x: number, y: number): Terrain {
 }
 
 export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "water" && terrain !== "rock" && terrain !== "barrier" && terrain !== "box";
+  return terrain !== "water" && terrain !== "rock" && terrain !== "barrier" &&
+    terrain !== "box";
 }
 
 export function luckAt(seed: number, x: number, y: number): number {
