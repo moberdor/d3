@@ -2,7 +2,7 @@
 // once, and the events it returns are a record of what happened. Whoever called
 // apply() decides how, or whether, to show them over time.
 
-import { type Recipe, RECIPES } from "./recipes.ts";
+import { CAPSTONE, type Recipe, RECIPES } from "./recipes.ts";
 import {
   BOX_CENTER,
   isPassable,
@@ -24,6 +24,7 @@ export type GameState = {
   inventory: Record<string, number>;
   gathered: Record<string, boolean>;
   unlocked: boolean;
+  finished: boolean;
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
@@ -47,6 +48,7 @@ export type GameEvent =
   | { type: "crafted"; recipe: string; inventory: Record<string, number> }
   | { type: "craftFailed"; recipe: string; missing: Record<string, number> }
   | { type: "unlocked"; at: Cell }
+  | { type: "finished"; recipe: string}
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -57,11 +59,12 @@ const STEPS: Record<Direction, Cell> = {
 
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {}, unlocked: false };
+  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {}, unlocked: false, finished: false };
 }
 
 // The single way in. It updates the state it is given and returns the events.
 export function apply(state: GameState, command: Command): GameEvent[] {
+  if (state.finished) return [];
   switch (command.type) {
     case "move":
       return move(state, command.direction);
@@ -102,6 +105,11 @@ function craft(state: GameState, name: string): GameEvent[] {
   if (name === "key" && !state.unlocked) {
     state.unlocked = true;
     events.push({type: "unlocked", at: { ...BOX_CENTER}})
+  }
+
+  if (name === "CAPSTONE") {
+    state.finished = true;
+    events.push({type: "finished", recipe: name})
   }
 
   return events;
