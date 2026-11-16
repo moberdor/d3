@@ -1,3 +1,7 @@
+# Emberwake
+
+You are shipwrecked on an island and need rescue. Gather wood and fiber to build a raft that lets you get iron from your ship to craft a pickaxe to mine stone, then build a signal beacon so you can be found.
+
 # D3 starter
 
 A walking skeleton: one thin slice of a game that works from end to end. The player moves gridwise over a big seeded world, with a game core that knows nothing about Phaser and a Phaser client that presents what the core reports. Assignment instructions are on Canvas.
