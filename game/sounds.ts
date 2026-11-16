@@ -11,6 +11,7 @@ const SOUND_FOR: Record<GameEvent["type"], SoundName | null> = {
   foundNothing: "bump",
   crafted: "craft",
   craftFailed: "bump",
+  unlocked: "pickup",
 };
 
 const SOUNDS: Record<SoundName, { file: string; volume: number }> = {

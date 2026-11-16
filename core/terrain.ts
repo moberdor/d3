@@ -1,16 +1,29 @@
 // The world is a pure function of a seed and coordinates. Nothing here is stored,
 // so the world can be effectively unbounded while saved state stays small.
 
-export type Terrain = "grass" | "forest" | "water" | "rock";
+export type Terrain = "grass" | "forest" | "water" | "rock" | "barrier" | "box" | "gem";
 
 export const TERRAINS: Record<Terrain, { yields: string; chance: number }> = {
   grass: { yields: "fiber", chance: 0.5 },
   forest: { yields: "wood", chance: 1 },
   water: { yields: "iron", chance: 1 },
   rock: { yields: "stone", chance: 1 },
+  barrier: { yields: "wood", chance: 1 },
+  box: { yields: "wood", chance: 0 },
+  gem: { yields: "gem", chance: 1 },
 };
 
+export const BOX_CENTER = { x: -8, y: -4 };
+
 export function terrainAt(seed: number, x: number, y: number): Terrain {
+  const dx = x - BOX_CENTER.x;
+  const dy = y - BOX_CENTER.y;
+  if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+    return dx === 0 && dy === 0 ? "gem" : "box";
+  }
+
+  if (y >= 12 && y <= 13 && x >= -15 && x <= 15) return "barrier";
+
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
   // seeds would start inside a lake or walled into a pocket.
@@ -21,7 +34,7 @@ export function terrainAt(seed: number, x: number, y: number): Terrain {
 }
 
 export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "water" && terrain !== "rock";
+  return terrain !== "water" && terrain !== "rock" && terrain !== "barrier" && terrain !== "box";
 }
 
 export function luckAt(seed: number, x: number, y: number): number {

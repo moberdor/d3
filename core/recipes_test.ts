@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { apply, newGame, RECIPES, TERRAINS } from "./mod.ts";
+import { apply, newGame, type Recipe, RECIPES, TERRAINS } from "./mod.ts";
 
 const SEED = 121;
 
@@ -32,17 +32,33 @@ Deno.test("a failed craft changes nothing and says what is missing", () => {
   ]);
 });
 
-Deno.test("every recipe input can be gathered or made", () => {
-  const sources = new Set([
-    ...Object.values(TERRAINS).map((row) => row.yields),
-    ...RECIPES.map((recipe) => recipe.output),
-  ]);
-  for (const recipe of RECIPES) {
-    for (const item of Object.keys(recipe.inputs)) {
-      assert(
-        sources.has(item),
-        `${recipe.output} needs ${item}, but nothing gives it`,
-      );
+function reachable(recipes: Recipe[]): Set<string> {
+  const have = new Set(Object.values(TERRAINS).map((row) => row.yields));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const recipe of recipes) {
+      if (have.has(recipe.output)) continue;
+      if (Object.keys(recipe.inputs).every((item) => have.has(item))) {
+        have.add(recipe.output);
+        changed = true;
+      }
     }
   }
+  return have;
+}
+
+Deno.test("every recipe output is reachable", () => {
+  const have = reachable(RECIPES);
+  for (const recipe of RECIPES) {
+    assert(have.has(recipe.output), `${recipe.output} can never be made`);
+  }
+});
+
+Deno.test("a recipe that needs its own output is unreachable", () => {
+  const broken: Recipe[] = [
+    ...RECIPES,
+    { output: "loop", inputs: { loop: 1, wood: 1 } },
+  ];
+  assert(!reachable(broken).has("loop"));
 });

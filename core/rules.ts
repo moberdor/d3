@@ -4,6 +4,7 @@
 
 import { type Recipe, RECIPES } from "./recipes.ts";
 import {
+  BOX_CENTER,
   isPassable,
   luckAt,
   type Terrain,
@@ -22,6 +23,7 @@ export type GameState = {
   player: Cell;
   inventory: Record<string, number>;
   gathered: Record<string, boolean>;
+  unlocked: boolean;
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
@@ -43,7 +45,8 @@ export type GameEvent =
   | { type: "missed"; at: Cell; terrain: Terrain; item: string }
   | { type: "foundNothing"; at: Cell }
   | { type: "crafted"; recipe: string; inventory: Record<string, number> }
-  | { type: "craftFailed"; recipe: string; missing: Record<string, number> };
+  | { type: "craftFailed"; recipe: string; missing: Record<string, number> }
+  | { type: "unlocked"; at: Cell }
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -54,7 +57,7 @@ const STEPS: Record<Direction, Cell> = {
 
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {} };
+  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {}, unlocked: false };
 }
 
 // The single way in. It updates the state it is given and returns the events.
@@ -92,7 +95,16 @@ function craft(state: GameState, name: string): GameEvent[] {
     state.inventory[item] -= count;
   }
   state.inventory[name] = (state.inventory[name] ?? 0) + 1;
-  return [{ type: "crafted", recipe: name, inventory: { ...state.inventory } }];
+  const events: GameEvent[] = [
+    { type: "crafted", recipe: name, inventory: { ...state.inventory } },
+  ];
+
+  if (name === "key" && !state.unlocked) {
+    state.unlocked = true;
+    events.push({type: "unlocked", at: { ...BOX_CENTER}})
+  }
+
+  return events;
 }
 
 export function keyOf(cell: Cell): string {
@@ -133,7 +145,8 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   const from = { ...state.player };
   const to = { x: from.x + step.x, y: from.y + step.y };
   const terrain = terrainAt(state.seed, to.x, to.y);
-  if (!isPassable(terrain)) {
+  const open = isPassable(terrain) || (terrain === "box" && state.unlocked);
+  if (!open) {
     return [{ type: "blocked", at: from, toward: to, terrain }];
   }
   state.player.x = to.x;

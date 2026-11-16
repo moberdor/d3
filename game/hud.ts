@@ -25,6 +25,8 @@ function describe(event: GameEvent): string {
       return `made ${event.recipe}`;
     case "craftFailed":
       return `can't make ${event.recipe}, need ${itemList(event.missing)}`;
+    case "unlocked":
+      return "the box unlocked"
   }
 }
 

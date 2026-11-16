@@ -75,3 +75,23 @@ Deno.test("an event keeps its cells while state moves on", () => {
     to: { x, y },
   }]);
 });
+
+Deno.test("crafting a key opens the box", () => {
+  const state = { ...newGame(SEED), player: { x: -6, y: -4 } };
+  state.inventory = { fiber: 1, wood: 2, rope: 1 };
+
+  // Before: shut.
+  const before = apply(state, { type: "move", direction: "west" });
+  assertEquals(before[0].type, "blocked");
+  assertEquals(state.player, { x: -6, y: -4 });
+
+  apply(state, { type: "craft", recipe: "key" });
+
+  // After: open.
+  const after = apply(state, { type: "move", direction: "west" });
+  assertEquals(after, [{
+    type: "moved",
+    from: { x: -6, y: -4 },
+    to: { x: -7, y: -4 },
+  }]);
+});

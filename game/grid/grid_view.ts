@@ -27,7 +27,12 @@ const TERRAIN_FRAMES: Record<Terrain, number> = {
   forest: frame(0, 1),
   water: frame(8, 5),
   rock: frame(22, 0),
+  barrier: frame(8, 1),
+  box: frame(13, 17),
+  gem: frame(23, 4),
 };
+
+const OPEN_BOX_FRAME = frame(9, 1);
 
 // Enough cells to cover the view, plus a margin so that the camera can lag behind
 // the player without showing an unpainted edge.
@@ -50,12 +55,16 @@ export class GridView extends Phaser.Scene {
   private readonly tiles: Phaser.GameObjects.Image[] = [];
   private shadow!: Phaser.GameObjects.Image;
   private marker!: Phaser.GameObjects.Image;
+  private unlocked: boolean;
+  private center: Cell;
   onCreate: () => void = () => {};
 
   constructor(state: GameState) {
     super("grid");
     this.seed = state.seed;
     this.start = { ...state.player };
+    this.unlocked = state.unlocked;
+    this.center = { ...state.player };
   }
 
   preload() {
@@ -122,6 +131,10 @@ export class GridView extends Phaser.Scene {
         this.gathered.add(keyOf(event.at));
         this.drawCellsAround(event.at);
         return Promise.resolve();
+      case "unlocked":
+        this.unlocked = true;
+        this.drawCellsAround(this.center)
+        return Promise.resolve()
       case "foundNothing":
       case "crafted":
       case "craftFailed":
@@ -178,14 +191,19 @@ export class GridView extends Phaser.Scene {
 
   // Paint only what is near the camera. Asking the core again costs little, and
   // the world itself is never stored.
-  private drawCellsAround({ x: centerX, y: centerY }: Cell) {
+  private drawCellsAround(center: Cell) {
+    this.center = { ...center };
     let i = 0;
-    for (let y = centerY - CELLS_DOWN; y <= centerY + CELLS_DOWN; y++) {
-      for (let x = centerX - CELLS_ACROSS; x <= centerX + CELLS_ACROSS; x++) {
-        const center = cellCenter({ x, y });
+    for (let y = center.y - CELLS_DOWN; y <= center.y + CELLS_DOWN; y++) {
+      for (let x = center.x - CELLS_ACROSS; x <= center.x + CELLS_ACROSS; x++) {
+        const cell = cellCenter({ x, y });
+        const terrain = terrainAt(this.seed, x, y);
+        const tile = terrain === "box" && this.unlocked
+          ? OPEN_BOX_FRAME
+          : TERRAIN_FRAMES[terrain];
         this.tiles[i++]
-          .setPosition(center.x, center.y)
-          .setFrame(TERRAIN_FRAMES[terrainAt(this.seed, x, y)])
+          .setPosition(cell.x, cell.y)
+          .setFrame(tile)
           .setAlpha(this.gathered.has(keyOf({ x, y })) ? 0.35 : 1);
       }
     }
