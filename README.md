@@ -1,12 +1,14 @@
 # Emberwake
 
-You are shipwrecked on an island and need rescue. Gather wood and fiber to make rope and a key, unlock the old box to get the gem inside, then craft the crown to win.
+Yarrr!!! The Pirate King lost his crown and wants it back.
 
-Play it here: https://moberdor.github.io/d3/
+You're the player. Find a way to get his former glory back by exploring the place, gathering resources, and crafting tools to travel to his old ship. Find the key, follow the X, unlock his treasure to get the gem, then craft the crown to win.
+
+Play it here: [Play EMBERWAKE](https://moberdor.github.io/d3/)
 
 ## How to play
 
-Move with arrows, G to gather, Tab + Enter to craft. Grass only has fiber sometimes. Make a key to open the box, grab the gem, then make the crown.
+Move with arrows, G to gather, Tab + Enter to craft. Grass only has fiber sometimes. Fishing gives you scrap, wood, or stone. Mountains give you iron. Find the key from the shipwreck to open the box, grab the treasure chest, then make the crown.
 
 ## Run locally
 
@@ -16,7 +18,7 @@ Run `deno task setup` once, then `deno task dev`.
 
 Add a row to `RECIPES` in `core/recipes.ts`, like `{ output: "rope", inputs: { fiber: 2 } }`. The button shows up on its own.
 
-# D3 starter
+## D3 starter
 
 A walking skeleton: one thin slice of a game that works from end to end. The player moves gridwise over a big seeded world, with a game core that knows nothing about Phaser and a Phaser client that presents what the core reports. Assignment instructions are on Canvas.
 

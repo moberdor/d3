@@ -61,7 +61,7 @@ const STEPS: Record<Direction, Cell> = {
 export function newGame(seed: number): GameState {
   return {
     seed,
-    player: { x: 0, y: 0 },
+    player: { x: 7, y: -5 },
     inventory: {},
     gathered: {},
     unlocked: false,
@@ -109,11 +109,6 @@ function craft(state: GameState, name: string): GameEvent[] {
     { type: "crafted", recipe: name, inventory: { ...state.inventory } },
   ];
 
-  if (name === "key" && !state.unlocked) {
-    state.unlocked = true;
-    events.push({ type: "unlocked", at: { ...BOX_CENTER } });
-  }
-
   if (name === CAPSTONE) {
     state.finished = true;
     events.push({ type: "finished", recipe: name });
@@ -136,17 +131,51 @@ export function cellAt(state: GameState, cell: Cell) {
 function gather(state: GameState): GameEvent[] {
   const at = { ...state.player };
   const { terrain, gathered } = cellAt(state, at);
-  if (gathered) return [{ type: "foundNothing", at }];
-  const row = TERRAINS[terrain];
-  state.gathered[keyOf(at)] = true;
-  if (luckAt(state.seed, at.x, at.y) >= row.chance) {
-    return [{ type: "missed", at, terrain, item: row.yields }];
+  if (terrain === "mountain" && !state.inventory["pickaxe"]) {
+    return [{ type: "foundNothing", at }];
   }
-  state.inventory[row.yields] = (state.inventory[row.yields] ?? 0) + 1;
+
+  if (
+    (terrain === "shallow_water" || terrain === "deep_water") &&
+    !state.inventory["fishing rod"]
+  ) {
+    return [{ type: "foundNothing", at }];
+  }
+  if (gathered) return [{ type: "foundNothing", at }];
+  if (terrain === "ship") {
+    state.gathered[keyOf(at)] = true;
+    state.inventory["key"] = (state.inventory["key"] ?? 0) + 1;
+    state.unlocked = true;
+
+    return [
+      {
+        type: "gathered",
+        at,
+        item: "key",
+        inventory: { ...state.inventory },
+      },
+      { type: "unlocked", at: { ...BOX_CENTER } },
+    ];
+  }
+  const row = TERRAINS[terrain];
+  const isWater = terrain === "shallow_water" || terrain === "deep_water";
+
+  const roll = luckAt(state.seed, at.x, at.y);
+
+  const item = isWater
+    ? roll < 0.5 ? "scrap" : roll < 0.8 ? "wood" : "stone"
+    : row.yields;
+
+  const chance = isWater ? 1 : row.chance;
+  state.gathered[keyOf(at)] = true;
+  if (luckAt(state.seed, at.x, at.y) >= chance) {
+    return [{ type: "missed", at, terrain, item }];
+  }
+  state.inventory[item] = (state.inventory[item] ?? 0) + 1;
   return [{
     type: "gathered",
     at,
-    item: row.yields,
+    item,
     inventory: { ...state.inventory },
   }];
 }
@@ -160,7 +189,15 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   const from = { ...state.player };
   const to = { x: from.x + step.x, y: from.y + step.y };
   const terrain = terrainAt(state.seed, to.x, to.y);
-  const open = isPassable(terrain) || (terrain === "box" && state.unlocked);
+  const hasRaft = (state.inventory["raft"] ?? 0) > 0;
+  const hasBoat = (state.inventory["boat"] ?? 0) > 0;
+  const hasRope = (state.inventory["rope"] ?? 0) > 0;
+  const open = isPassable(terrain) ||
+    (terrain === "box" && state.unlocked) ||
+    (terrain === "shallow_water" && (hasRaft || hasBoat)) ||
+    (terrain === "deep_water" && hasBoat) ||
+    (terrain === "mountain" && hasRope) ||
+    terrain === "ship";
   if (!open) {
     return [{ type: "blocked", at: from, toward: to, terrain }];
   }

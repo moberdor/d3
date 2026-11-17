@@ -33,18 +33,32 @@ Deno.test("a failed craft changes nothing and says what is missing", () => {
 });
 
 function reachable(recipes: Recipe[]): Set<string> {
-  const have = new Set(Object.values(TERRAINS).map((row) => row.yields));
+  const have = new Set<string>(
+    Object.values(TERRAINS)
+      .map((row) => row.yields)
+      .filter((item) => item !== ""),
+  );
+
+  have.add("scrap");
+  have.add("iron");
+  have.add("key");
+  have.add("gem");
+
   let changed = true;
+
   while (changed) {
     changed = false;
+
     for (const recipe of recipes) {
       if (have.has(recipe.output)) continue;
+
       if (Object.keys(recipe.inputs).every((item) => have.has(item))) {
         have.add(recipe.output);
         changed = true;
       }
     }
   }
+
   return have;
 }
 

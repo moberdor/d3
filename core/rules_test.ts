@@ -76,22 +76,31 @@ Deno.test("an event keeps its cells while state moves on", () => {
   }]);
 });
 
-Deno.test("crafting a key opens the box", () => {
-  const state = { ...newGame(SEED), player: { x: -6, y: -4 } };
-  state.inventory = { fiber: 1, wood: 2, rope: 1 };
+Deno.test("finding the shipwreck key unlocks the treasure", () => {
+  const state = newGame(SEED);
 
-  // Before: shut.
-  const before = apply(state, { type: "move", direction: "west" });
-  assertEquals(before[0].type, "blocked");
-  assertEquals(state.player, { x: -6, y: -4 });
+  // Find a shipwreck
+  let shipX = 0;
+  let shipY = 0;
+  let found = false;
 
-  apply(state, { type: "craft", recipe: "key" });
+  for (let y = -30; y <= 30 && !found; y++) {
+    for (let x = -30; x <= 30; x++) {
+      if (terrainAt(SEED, x, y) === "ship") {
+        shipX = x;
+        shipY = y;
+        found = true;
+        break;
+      }
+    }
+  }
 
-  // After: open.
-  const after = apply(state, { type: "move", direction: "west" });
-  assertEquals(after, [{
-    type: "moved",
-    from: { x: -6, y: -4 },
-    to: { x: -7, y: -4 },
-  }]);
+  if (!found) throw new Error("Shipwreck not found");
+
+  // Get the key from the ship.
+  state.player = { x: shipX, y: shipY };
+  apply(state, { type: "gather" });
+
+  assertEquals(state.inventory.key, 1);
+  assertEquals(state.unlocked, true);
 });

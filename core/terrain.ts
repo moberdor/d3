@@ -4,47 +4,78 @@
 export type Terrain =
   | "grass"
   | "forest"
-  | "water"
-  | "rock"
+  | "stone"
+  | "shallow_water"
+  | "mountain"
+  | "deep_water"
+  | "ship"
   | "barrier"
   | "box"
-  | "gem";
+  | "chest";
 
 export const TERRAINS: Record<Terrain, { yields: string; chance: number }> = {
-  grass: { yields: "fiber", chance: 0.5 },
+  grass: { yields: "fiber", chance: 0.8 },
   forest: { yields: "wood", chance: 1 },
-  water: { yields: "iron", chance: 1 },
-  rock: { yields: "stone", chance: 1 },
+  stone: { yields: "stone", chance: 1 },
+  mountain: { yields: "iron", chance: 1 },
+  shallow_water: { yields: "scrap", chance: 0 },
+  deep_water: { yields: "scrap", chance: 0 },
   barrier: { yields: "wood", chance: 1 },
   box: { yields: "wood", chance: 0 },
-  gem: { yields: "gem", chance: 1 },
+  ship: { yields: "key", chance: 1 },
+  chest: { yields: "gem", chance: 1 },
 };
 
-export const BOX_CENTER = { x: -8, y: -4 };
+export const BOX_CENTER = { x: -5, y: -4 };
+export const SHIP_CENTER = { x: 18, y: -8 };
 
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const dx = x - BOX_CENTER.x;
   const dy = y - BOX_CENTER.y;
-  if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-    return dx === 0 && dy === 0 ? "gem" : "box";
+
+  if (dx === 0 && dy === 0) return "chest";
+
+  //more it has more x shape for treasure hunt pirate theme
+  if (
+    (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) ||
+    (Math.abs(dx) === 2 && Math.abs(dy) === 2)
+  ) {
+    return "box";
   }
 
   if (y >= 12 && y <= 13 && x >= -15 && x <= 15) return "barrier";
+  if (x === SHIP_CENTER.x && y === SHIP_CENTER.y) {
+    return "ship";
+  }
+
+  const distance = Math.hypot(x - SHIP_CENTER.x, y - SHIP_CENTER.y);
+  const edge = (noise(seed + 10, x, y, 4) - 0.5) * 2;
+
+  if (distance < 4 + edge) return "deep_water";
+  if (distance < 6 + edge) return "shallow_water";
 
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
   // seeds would start inside a lake or walled into a pocket.
   const height = 0.5 + (raw - 0.5) * Math.min(1, Math.hypot(x, y) / 10);
-  if (height < 0.3) return "water";
-  if (height > 0.7) return "rock";
+  if (height < 0.22) return "deep_water";
+  if (height < 0.32) return "shallow_water";
+
+  if (height > 0.72) return "mountain";
+
+  if (height > 0.55 && noise(seed + 4, x, y, 2) > 0.78) {
+    return "stone";
+  }
   return noise(seed + 2, x, y, 6) < 0.45 ? "forest" : "grass";
 }
 
 export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "water" && terrain !== "rock" && terrain !== "barrier" &&
+  return terrain !== "shallow_water" &&
+    terrain !== "deep_water" &&
+    terrain !== "mountain" &&
+    terrain !== "barrier" &&
     terrain !== "box";
 }
-
 export function luckAt(seed: number, x: number, y: number): number {
   return gridValue(seed + 3, x, y);
 }

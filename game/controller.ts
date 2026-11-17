@@ -3,10 +3,15 @@ import type { GameState } from "../core/mod.ts";
 import type { Presenter } from "./presenter.ts";
 
 const ARROWS: Record<string, Direction> = {
-  ArrowUp: "north",
-  ArrowDown: "south",
-  ArrowLeft: "west",
-  ArrowRight: "east",
+  arrowup: "north",
+  arrowdown: "south",
+  arrowleft: "west",
+  arrowright: "east",
+
+  w: "north",
+  s: "south",
+  a: "west",
+  d: "east",
 };
 
 // Input in, core in the middle, presenter out. None of those three knows the others,
@@ -46,7 +51,7 @@ export class Controller {
       this.send({ type: "gather" });
       return;
     }
-    const direction = ARROWS[event.key];
+    const direction = ARROWS[event.key.toLowerCase()];
     if (!direction || event.ctrlKey || event.metaKey || event.altKey) return;
     // Otherwise arrow keys would also scroll the page.
     event.preventDefault();
@@ -58,7 +63,7 @@ export class Controller {
 
   private keyUp(event: KeyboardEvent) {
     this.held = this.held.filter((direction) =>
-      direction !== ARROWS[event.key]
+      direction !== ARROWS[event.key.toLowerCase()]
     );
   }
 

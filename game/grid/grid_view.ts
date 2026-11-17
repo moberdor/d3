@@ -25,11 +25,17 @@ const HERO = frame(27, 0);
 const TERRAIN_FRAMES: Record<Terrain, number> = {
   grass: frame(5, 0),
   forest: frame(0, 1),
-  water: frame(8, 5),
-  rock: frame(22, 0),
+  stone: frame(5, 2),
+  shallow_water: frame(8, 5),
+  deep_water: frame(8, 5),
+  mountain: frame(22, 0),
+  ship: frame(11, 19),
   barrier: frame(8, 1),
   box: frame(13, 17),
-  gem: frame(23, 4),
+  chest: frame(23, 1),
+};
+const TERRAIN_TINTS: Partial<Record<Terrain, number>> = {
+  deep_water: 0x4477aa,
 };
 
 const OPEN_BOX_FRAME = frame(9, 1);
@@ -206,6 +212,7 @@ export class GridView extends Phaser.Scene {
         this.tiles[i++]
           .setPosition(cell.x, cell.y)
           .setFrame(tile)
+          .setTint(TERRAIN_TINTS[terrain] ?? 0xffffff)
           .setAlpha(this.gathered.has(keyOf({ x, y })) ? 0.35 : 1);
       }
     }

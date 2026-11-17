@@ -13,12 +13,18 @@ const SEED = 121;
 
 function standingWhere(lucky: boolean): GameState {
   for (let x = 0; x < 10_000; x++) {
-    const chance = TERRAINS[terrainAt(SEED, x, 0)].chance;
+    const terrain = terrainAt(SEED, x, 0);
+
+    if (terrain !== "grass") continue;
+
+    const chance = TERRAINS[terrain].chance;
+
     if ((luckAt(SEED, x, 0) < chance) === lucky) {
       return { ...newGame(SEED), player: { x, y: 0 } };
     }
   }
-  throw new Error("Found no suitable cell on this row.");
+
+  throw new Error("Found no suitable grass cell.");
 }
 
 Deno.test("gathering adds what the terrain yields", () => {
